@@ -40,8 +40,8 @@ interface Idea {
   id: number
   name: string
   status: 'proposed' | 'active' | 'specced' | 'designed' | 'building' | 'built' | 'developed' | 'qa_pass' | 'qa_fail' | 'deployed' | 'killed' | 'filtered'
-  one_liner: string
-  ranking: Ranking
+  one_liner?: string
+  ranking?: Ranking
   repo_url?: string
   live_url?: string
   developer_output?: DeveloperOutput
@@ -302,13 +302,17 @@ export default function Dashboard() {
                           <h4 className="font-semibold text-sm text-white truncate">
                             #{idea.id} {idea.name}
                           </h4>
-                          <span className="text-xs font-bold text-cyan-400">
-                            {idea.ranking.weighted_score.toFixed(1)}
-                          </span>
+                          {idea.ranking && (
+                            <span className="text-xs font-bold text-cyan-400">
+                              {idea.ranking.weighted_score.toFixed(1)}
+                            </span>
+                          )}
                         </div>
-                        <p className="text-xs text-gray-400 line-clamp-2">
-                          {idea.one_liner}
-                        </p>
+                        {idea.one_liner && (
+                          <p className="text-xs text-gray-400 line-clamp-2">
+                            {idea.one_liner}
+                          </p>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -341,30 +345,34 @@ export default function Dashboard() {
               </div>
 
               {/* One-liner */}
-              <div className="mb-6">
-                <h3 className="text-sm font-semibold text-gray-300 mb-2">DESCRIPTION</h3>
-                <p className="text-sm text-gray-400">{selectedIdea.one_liner}</p>
-              </div>
+              {selectedIdea.one_liner && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-semibold text-gray-300 mb-2">DESCRIPTION</h3>
+                  <p className="text-sm text-gray-400">{selectedIdea.one_liner}</p>
+                </div>
+              )}
 
               {/* Radar chart */}
-              <div className="mb-6">
-                <h3 className="text-sm font-semibold text-gray-300 mb-2">RANKING PROFILE</h3>
-                <div className="flex justify-center">
-                  <RadarChart data={selectedIdea.ranking} />
+              {selectedIdea.ranking && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-semibold text-gray-300 mb-2">RANKING PROFILE</h3>
+                  <div className="flex justify-center">
+                    <RadarChart data={selectedIdea.ranking} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs mt-4">
+                    {Object.entries(selectedIdea.ranking).filter(([key]) => key !== 'weighted_score').map(([key, value]) => (
+                      <div key={key} className="flex justify-between">
+                        <span className="text-gray-400">{key.toUpperCase()}:</span>
+                        <span className="text-white">{value}/10</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-gray-700 flex justify-between font-bold">
+                    <span className="text-cyan-400">WEIGHTED SCORE:</span>
+                    <span className="text-cyan-400">{selectedIdea.ranking.weighted_score.toFixed(2)}</span>
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-xs mt-4">
-                  {Object.entries(selectedIdea.ranking).filter(([key]) => key !== 'weighted_score').map(([key, value]) => (
-                    <div key={key} className="flex justify-between">
-                      <span className="text-gray-400">{key.toUpperCase()}:</span>
-                      <span className="text-white">{value}/10</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-2 pt-2 border-t border-gray-700 flex justify-between font-bold">
-                  <span className="text-cyan-400">WEIGHTED SCORE:</span>
-                  <span className="text-cyan-400">{selectedIdea.ranking.weighted_score.toFixed(2)}</span>
-                </div>
-              </div>
+              )}
 
               {/* QA Output */}
               {selectedIdea.qa_output && (
