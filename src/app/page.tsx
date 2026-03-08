@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
+import AgentTimeline, { type AgentEvent } from './components/AgentTimeline'
 
 // Types
 interface Ranking {
@@ -46,12 +47,32 @@ interface Idea {
   live_url?: string
   developer_output?: DeveloperOutput
   qa_output?: QAOutput
+  agent_events?: AgentEvent[]
 }
 
 interface PipelineData {
   nextId: number
   ideas: Idea[]
 }
+
+// Mock agent events for development (remove when backend emits real data)
+const MOCK_AGENT_EVENTS: AgentEvent[] = (() => {
+  const base = new Date(Date.now() - 8 * 60000).toISOString()
+  const at = (minOffset: number) => new Date(new Date(base).getTime() + minOffset * 60000).toISOString()
+  return [
+    { agent: 'scout', event: 'spawned', ts: at(0) },
+    { agent: 'scout', event: 'completed', ts: at(1.2) },
+    { agent: 'ranker', event: 'spawned', ts: at(1.3) },
+    { agent: 'ranker', event: 'completed', ts: at(2.1) },
+    { agent: 'specwriter', event: 'spawned', ts: at(2.2) },
+    { agent: 'specwriter', event: 'completed', ts: at(3.8) },
+    { agent: 'designer', event: 'spawned', ts: at(3.9) },
+    { agent: 'designer', event: 'completed', ts: at(5.5) },
+    { agent: 'scaffolder', event: 'spawned', ts: at(5.6) },
+    { agent: 'scaffolder', event: 'completed', ts: at(6.4) },
+    { agent: 'developer', event: 'spawned', ts: at(6.5) },
+  ]
+})()
 
 // Status configuration
 const STATUS_CONFIG = {
@@ -183,7 +204,20 @@ export default function Dashboard() {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
       const newData = await response.json()
+      // Inject mock agent_events for development (remove when backend emits real data)
+      newData.ideas = newData.ideas.map((idea: Idea) => {
+        if (!idea.agent_events) {
+          return { ...idea, agent_events: MOCK_AGENT_EVENTS }
+        }
+        return idea
+      })
       setData(newData)
+      // Refresh selectedIdea from new data so timeline updates live
+      setSelectedIdea(prev => {
+        if (!prev) return null
+        const updated = newData.ideas.find((i: Idea) => i.id === prev.id)
+        return updated || prev
+      })
       setError(null)
       setLastUpdate(new Date())
       if (isLoading) setIsLoading(false)
@@ -194,11 +228,15 @@ export default function Dashboard() {
     }
   }, [isLoading])
 
+  // Adaptive polling: 3s when selected idea is actively building, 15s otherwise
+  const isActiveBuild = selectedIdea && ['scaffolded', 'developed', 'designed'].includes(selectedIdea.status)
+  const pollInterval = isActiveBuild ? 3000 : 15000
+
   useEffect(() => {
     fetchData()
-    const interval = setInterval(fetchData, 15000)
+    const interval = setInterval(fetchData, pollInterval)
     return () => clearInterval(interval)
-  }, [fetchData])
+  }, [fetchData, pollInterval])
 
   // Status counts for top bar
   const statusCounts = data?.ideas.reduce((acc, idea) => {
@@ -357,6 +395,11 @@ export default function Dashboard() {
                   <h3 className="text-sm font-semibold text-gray-300 mb-2">DESCRIPTION</h3>
                   <p className="text-sm text-gray-400">{selectedIdea.one_liner}</p>
                 </div>
+              )}
+
+              {/* Agent Timeline */}
+              {selectedIdea.agent_events && selectedIdea.agent_events.length > 0 && (
+                <AgentTimeline events={selectedIdea.agent_events} />
               )}
 
               {/* Radar chart */}
