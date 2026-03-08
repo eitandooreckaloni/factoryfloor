@@ -39,7 +39,7 @@ interface QAOutput {
 interface Idea {
   id: number
   name: string
-  status: 'proposed' | 'active' | 'specced' | 'designed' | 'building' | 'built' | 'developed' | 'qa_pass' | 'qa_fail' | 'deployed' | 'killed' | 'filtered'
+  status: 'scouted' | 'ranked' | 'specced' | 'designed' | 'scaffolded' | 'developed' | 'qa_pass' | 'qa_fail' | 'deployed' | 'killed' | 'filtered'
   one_liner?: string
   ranking?: Ranking
   repo_url?: string
@@ -55,12 +55,11 @@ interface PipelineData {
 
 // Status configuration
 const STATUS_CONFIG = {
-  proposed: { label: 'Proposed', color: 'text-teal-400', bgColor: 'bg-teal-500/10', borderColor: 'border-teal-500/30' },
-  active: { label: 'Active', color: 'text-cyan-400', bgColor: 'bg-cyan-500/10', borderColor: 'border-cyan-500/30' },
+  scouted: { label: 'Scouted', color: 'text-teal-400', bgColor: 'bg-teal-500/10', borderColor: 'border-teal-500/30' },
+  ranked: { label: 'Ranked', color: 'text-cyan-400', bgColor: 'bg-cyan-500/10', borderColor: 'border-cyan-500/30' },
   specced: { label: 'Specced', color: 'text-blue-400', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/30' },
   designed: { label: 'Designed', color: 'text-purple-400', bgColor: 'bg-purple-500/10', borderColor: 'border-purple-500/30' },
-  building: { label: 'Building', color: 'text-blue-400', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/30' },
-  built: { label: 'Built', color: 'text-blue-400', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/30' },
+  scaffolded: { label: 'Scaffolded', color: 'text-blue-400', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/30' },
   developed: { label: 'Developed', color: 'text-blue-400', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/30' },
   qa_pass: { label: 'QA Pass', color: 'text-green-400', bgColor: 'bg-green-500/10', borderColor: 'border-green-500/30' },
   qa_fail: { label: 'QA Fail', color: 'text-amber-400', bgColor: 'bg-amber-500/10', borderColor: 'border-amber-500/30' },
@@ -201,7 +200,7 @@ export default function Dashboard() {
 
   // Group ideas by status for kanban view
   const columns = [
-    'proposed', 'active', 'specced', 'designed', 'building', 'built',
+    'scouted', 'ranked', 'specced', 'designed', 'scaffolded',
     'developed', 'qa_pass', 'qa_fail', 'deployed'
   ]
 
@@ -262,7 +261,7 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded text-blue-400">
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-              BUILDING: {(statusCounts.building || 0) + (statusCounts.developed || 0)}
+              BUILDING: {(statusCounts.scaffolded || 0) + (statusCounts.developed || 0)}
             </div>
             <div className="flex items-center gap-2 px-3 py-1 bg-amber-500/20 border border-amber-500/30 rounded text-amber-400">
               <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
@@ -278,8 +277,8 @@ export default function Dashboard() {
 
       <div className="flex h-[calc(100vh-140px)] relative">
         {/* Main kanban board */}
-        <div className={`flex-1 transition-all duration-300 ${selectedIdea ? 'mr-96' : ''}`}>
-          <div className="flex gap-4 p-6 h-full overflow-x-auto">
+        <div className={`flex-1 min-w-0 overflow-hidden transition-all duration-300 ${selectedIdea ? 'mr-96' : ''}`}>
+          <div className="flex gap-4 p-6 h-full overflow-x-auto scrollbar-thin">
             {columns.map(status => (
               <div key={status} className="flex-shrink-0 w-72">
                 <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-lg h-full flex flex-col">
