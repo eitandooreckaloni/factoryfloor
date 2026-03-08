@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 
 // Types
 interface Ranking {
@@ -167,6 +167,14 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+  const boardRef = useRef<HTMLDivElement>(null)
+
+  const scrollToColumn = (status: string) => {
+    const el = document.getElementById(`column-${status}`)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' })
+    }
+  }
 
   const fetchData = useCallback(async () => {
     try {
@@ -201,7 +209,7 @@ export default function Dashboard() {
   // Group ideas by status for kanban view
   const columns = [
     'scouted', 'ranked', 'specced', 'designed', 'scaffolded',
-    'developed', 'qa_pass', 'qa_fail', 'deployed'
+    'developed', 'qa_pass', 'qa_fail', 'deployed', 'killed'
   ]
 
   const groupedIdeas = columns.reduce((acc, status) => {
@@ -255,22 +263,22 @@ export default function Dashboard() {
           
           {/* Status counters */}
           <div className="flex gap-4 mt-4">
-            <div className="flex items-center gap-2 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded text-green-400">
+            <button onClick={() => scrollToColumn('deployed')} className="flex items-center gap-2 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded text-green-400 hover:bg-green-500/30 transition-colors cursor-pointer">
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               DEPLOYED: {statusCounts.deployed || 0}
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded text-blue-400">
+            </button>
+            <button onClick={() => scrollToColumn('scaffolded')} className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 border border-blue-500/30 rounded text-blue-400 hover:bg-blue-500/30 transition-colors cursor-pointer">
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
               BUILDING: {(statusCounts.scaffolded || 0) + (statusCounts.developed || 0)}
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1 bg-amber-500/20 border border-amber-500/30 rounded text-amber-400">
+            </button>
+            <button onClick={() => scrollToColumn('qa_fail')} className="flex items-center gap-2 px-3 py-1 bg-amber-500/20 border border-amber-500/30 rounded text-amber-400 hover:bg-amber-500/30 transition-colors cursor-pointer">
               <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
               QA FAIL: {statusCounts.qa_fail || 0}
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1 bg-red-500/20 border border-red-500/30 rounded text-red-400">
+            </button>
+            <button onClick={() => scrollToColumn('killed')} className="flex items-center gap-2 px-3 py-1 bg-red-500/20 border border-red-500/30 rounded text-red-400 hover:bg-red-500/30 transition-colors cursor-pointer">
               <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
               KILLED: {statusCounts.killed || 0}
-            </div>
+            </button>
           </div>
         </div>
       </header>
@@ -278,9 +286,9 @@ export default function Dashboard() {
       <div className="flex h-[calc(100vh-140px)] relative">
         {/* Main kanban board */}
         <div className={`flex-1 min-w-0 overflow-hidden transition-all duration-300 ${selectedIdea ? 'mr-96' : ''}`}>
-          <div className="flex gap-4 p-6 h-full overflow-x-auto scrollbar-thin">
+          <div ref={boardRef} className="flex gap-4 p-6 h-full overflow-x-auto scrollbar-thin">
             {columns.map(status => (
-              <div key={status} className="flex-shrink-0 w-72">
+              <div key={status} id={`column-${status}`} className="flex-shrink-0 w-72">
                 <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-lg h-full flex flex-col">
                   <div className={`px-4 py-3 border-b border-gray-800 ${STATUS_CONFIG[status as keyof typeof STATUS_CONFIG].bgColor}`}>
                     <h3 className={`font-bold text-sm ${STATUS_CONFIG[status as keyof typeof STATUS_CONFIG].color}`}>
