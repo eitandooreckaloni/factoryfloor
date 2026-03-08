@@ -39,7 +39,7 @@ interface QAOutput {
 interface Idea {
   id: number
   name: string
-  status: 'active' | 'specced' | 'designed' | 'building' | 'built' | 'developed' | 'qa_pass' | 'qa_fail' | 'deployed' | 'killed' | 'filtered'
+  status: 'proposed' | 'active' | 'specced' | 'designed' | 'building' | 'built' | 'developed' | 'qa_pass' | 'qa_fail' | 'deployed' | 'killed' | 'filtered'
   one_liner: string
   ranking: Ranking
   repo_url?: string
@@ -49,12 +49,13 @@ interface Idea {
 }
 
 interface PipelineData {
-  next_id: number
+  nextId: number
   ideas: Idea[]
 }
 
 // Status configuration
 const STATUS_CONFIG = {
+  proposed: { label: 'Proposed', color: 'text-teal-400', bgColor: 'bg-teal-500/10', borderColor: 'border-teal-500/30' },
   active: { label: 'Active', color: 'text-cyan-400', bgColor: 'bg-cyan-500/10', borderColor: 'border-cyan-500/30' },
   specced: { label: 'Specced', color: 'text-blue-400', bgColor: 'bg-blue-500/10', borderColor: 'border-blue-500/30' },
   designed: { label: 'Designed', color: 'text-purple-400', bgColor: 'bg-purple-500/10', borderColor: 'border-purple-500/30' },
@@ -200,7 +201,7 @@ export default function Dashboard() {
 
   // Group ideas by status for kanban view
   const columns = [
-    'active', 'specced', 'designed', 'building', 'built', 
+    'proposed', 'active', 'specced', 'designed', 'building', 'built',
     'developed', 'qa_pass', 'qa_fail', 'deployed'
   ]
 
@@ -486,7 +487,7 @@ export default function Dashboard() {
       <footer className="absolute bottom-0 left-0 right-0 bg-gray-900/50 backdrop-blur-sm border-t border-gray-800 px-6 py-2">
         <div className="flex justify-between items-center text-xs">
           <div className="text-gray-500">
-            FACTORY STATUS: {data?.ideas.length || 0} IDEAS PROCESSED | NEXT ID: {data?.next_id || 'N/A'}
+            FACTORY STATUS: {data?.ideas.length || 0} IDEAS PROCESSED | NEXT ID: {data?.nextId || 'N/A'}
           </div>
           <div className="text-gray-500">
             {lastUpdate && `LAST SYNC: ${lastUpdate.toLocaleTimeString()}`}
